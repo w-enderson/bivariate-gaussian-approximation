@@ -1,0 +1,114 @@
+---
+title: "relatorio"
+author: "wenderson santos"
+output: pdf_document
+always_allow_html: true
+---
+
+# Imports
+
+```{r, message=FALSE, warning=FALSE}
+#install.packages("plotly")
+library("plotly")
+
+```
+
+```{r}
+source("functions.R")
+```
+
+# Função Gaussiana
+
+```         
+$$
+f(x, y) = K \cdot e^{-c(x^2 + y^2)}
+$$ 
+```
+
+$$ 
+f(x, y)=k \cdot exp[ -c(x^2 + y^2) ]; k, c > 0$$
+
+k : Amplitude máxima da função; **f(0,0) = k**
+
+c: Abertura e decaimento da curva;
+
+```{r}
+f <- function(x,y, k=3, c=2){
+
+  return( k*exp(-c(x^2 + y^2)))
+}
+```
+
+# Objetivo
+
+Usar polinômios de duas variáveis para aproximar a função gaussiana;
+
+# Geração de pontos aleatórios sobre o retângulo [-4,4]x[-4,4]
+
+```{r}
+set.seed(28)
+```
+
+```{r}
+# número de pontos
+n<- 1000
+
+min_<- -4
+max_<- 4
+
+x<- runif(n, min= min_, max= max_)
+y<- runif(n, min= min_, max= max_)
+
+z<- f(x,y)
+
+pontos<- cbind(x,y, z)
+
+matriz<- data.frame(pontos)
+
+print(matriz[1:5,])
+```
+
+```{r}
+plot_pontos_3d(x,y,z)
+```
+
+## Possível problema
+
+Há muitos pontos na região em que f(x,y) é próximo de zero ...
+
+# Modelo 1 [ m1(x,y) = b0 + b1x + b2y]
+
+```{r}
+
+modelo1<- lm(z ~ x + y, data=matriz)
+summary(modelo1)
+plot(modelo1)
+```
+
+```{r}
+plot_residuos_preditores(modelo1, matriz)
+```
+
+# Modelo 2 [ m2(x,y) = b0 + b1\*x + b2\*y + b3\*x\^2 + b4\*y\^2 + b5\*x\*y]
+
+```{r}
+modelo2<- lm(z ~ x + y + I(x^2) + I(y^2) + I(x*y), data=matriz)
+summary(modelo2)
+plot(modelo2)
+```
+
+```{r}
+plot_residuos_preditores(modelo2, matriz)
+```
+
+# Modelo 3 [ m2(x,y) = b0 + b1\*x + b2\*y + b3\*x\^2 + b4\*y\^2 +b5\*x\*y + b6 \**x\^3 + b7* \*y\^3]
+
+```{r}
+modelo3<- lm(z ~ x + y + I(x^2) + I(y^2) + I(x*y) + I(x^3) + I(y^3) + I(x*y^2) + I(y*x^2), data=matriz)
+summary(modelo3)
+plot(modelo3)
+```
+
+```{r}
+plot_residuos_preditores(modelo3, matriz)
+```
