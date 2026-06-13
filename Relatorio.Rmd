@@ -5,6 +5,30 @@ output: pdf_document
 always_allow_html: true
 ---
 
+# Estimadores de Mínimos Quadrados
+
+seja X a matriz de dados com n observações e p variáveis;
+
+seja y a variável alvo
+
+Os estimadores de mínimos quadrados são:
+
+B_hat = (X'X)\^{-1} X'y
+
+Assumindo o modelo linear Y = XB + e ,
+
+e assumindo que, para todo i e j:
+
+E(e_i) = 0
+
+cov(e_i, e_j)= 0 (erros não correlacionados)
+
+var(e_i) = sigma2 (homocedasticidade)
+
+de acordo com o teorema de Gauss-Markov, os estimadores de mínimos quadrados serão os melhores estimadores lineares não viesados, sob as suposições anteriores.
+
+Para os testes de hipóteses, assumimos que e_i \~ N(0, sigma2)
+
 # Imports
 
 ```{r, message=FALSE, warning=FALSE}
@@ -32,8 +56,10 @@ k : Amplitude máxima da função; **f(0,0) = k**
 
 c: Abertura e decaimento da curva;
 
+f: R\^2 -\> R+
+
 ```{r}
-f <- function(x,y, k=3, c=2){
+f <- function(x,y, k=10, c=6){
 
   return( k*exp(-c(x^2 + y^2)))
 }
@@ -43,7 +69,7 @@ f <- function(x,y, k=3, c=2){
 
 Usar polinômios de duas variáveis para aproximar a função gaussiana;
 
-# Geração de pontos aleatórios sobre o retângulo [-4,4]x[-4,4]
+# Geração de pontos aleatórios 
 
 ```{r}
 set.seed(28)
@@ -51,64 +77,71 @@ set.seed(28)
 
 ```{r}
 # número de pontos
-n<- 1000
+n<- 100
 
 min_<- -4
 max_<- 4
 
-x<- runif(n, min= min_, max= max_)
-y<- runif(n, min= min_, max= max_)
+x_unif<- runif(n, min= min_, max= max_)
+y_unif<- runif(n, min= min_, max= max_)
+z_unif<- f(x_unif,y_unif)
 
-z<- f(x,y)
+x_normal<- rnorm(n, 0, 2)
+y_normal<- rnorm(n, 0, 2)
+z_normal<- f(x_normal, y_normal)
 
-pontos<- cbind(x,y, z)
+pontos_unif<- cbind(x_unif,y_unif, z_unif)
+pontos_normal<- cbind(x_normal, y_normal, z_normal)
 
-matriz<- data.frame(pontos)
+matriz_unif<- data.frame(pontos_unif)
+matriz_normal<- data.frame(pontos_normal)
 
-print(matriz[1:5,])
+print(matriz_unif[1:5,])
+
 ```
-
-```{r}
-plot_pontos_3d(x,y,z)
-```
-
-## Possível problema
-
-Há muitos pontos na região em que f(x,y) é próximo de zero ...
 
 # Modelo 1 [ m1(x,y) = b0 + b1x + b2y]
 
 ```{r}
 
-modelo1<- lm(z ~ x + y, data=matriz)
-summary(modelo1)
-plot(modelo1)
-```
-
-```{r}
-plot_residuos_preditores(modelo1, matriz)
+modelo1_unif<- lm(z_unif ~ x_unif + y_unif, data=matriz_unif)
+modelo1_noraml<- lm(z_normal ~ x_normal + y_normal, data=matriz_normal)
+summary(modelo1_unif)
+plot(modelo1_unif)
 ```
 
 # Modelo 2 [ m2(x,y) = b0 + b1\*x + b2\*y + b3\*x\^2 + b4\*y\^2 + b5\*x\*y]
 
 ```{r}
-modelo2<- lm(z ~ x + y + I(x^2) + I(y^2) + I(x*y), data=matriz)
+modelo2<- lm(z_unif ~ x_unif + y_unif + I(x_unif^2) + I(y_unif^2) + I(x_unif*y_unif), data=matriz_unif)
 summary(modelo2)
 plot(modelo2)
-```
-
-```{r}
-plot_residuos_preditores(modelo2, matriz)
 ```
 
 # Modelo 3 [ m2(x,y) = b0 + b1\*x + b2\*y + b3\*x\^2 + b4\*y\^2 +b5\*x\*y + b6 \**x\^3 + b7* \*y\^3]
 
 ```{r}
-modelo3<- lm(z ~ x + y + I(x^2) + I(y^2) + I(x*y) + I(x^3) + I(y^3) + I(x*y^2) + I(y*x^2), data=matriz)
+modelo3<- lm(z_unif ~ x_unif + y_unif + I(x_unif^2) + I(y_unif^2) + I(x_unif*y_unif) + I(x_unif^3) + I(y_unif^3) + I(x_unif^2 * y_unif) + I(x_unif * y_unif^2), data=matriz_unif)
 summary(modelo3)
 plot(modelo3)
 ```
 
 ```{r}
-plot_residuos_preditores(modelo3, matriz)
+hist(modelo3$residuals)
 ```
+
+## Observações sobre esses modelos:
+
+residuo = valor_real - valor_previsto
+
+residuo = - valor_previsto (quando o real é zero)
+
+- A maioria desses modelos não atendem às suposições necessárias para o teorema de gauss-markov
+
+  - Os erros são heterocedásticos e correlacionados.
+
+- O modelo prevê valores menores que zero (fora do contradomínio de f)
+
+- Como a variável Y é truncada assintoticamente em zero, usar mínimos quadrados diretamente não é bom.
+
+# Transformação LN(Y)
