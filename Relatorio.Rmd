@@ -69,7 +69,7 @@ f <- function(x,y, k=10, c=6){
 
 Usar polinômios de duas variáveis para aproximar a função gaussiana;
 
-# Geração de pontos aleatórios 
+# Geração de pontos aleatórios
 
 ```{r}
 set.seed(28)
@@ -86,8 +86,8 @@ x_unif<- runif(n, min= min_, max= max_)
 y_unif<- runif(n, min= min_, max= max_)
 z_unif<- f(x_unif,y_unif)
 
-x_normal<- rnorm(n, 0, 2)
-y_normal<- rnorm(n, 0, 2)
+x_normal<- rnorm(n, 0, 1)
+y_normal<- rnorm(n, 0, 1)
 z_normal<- f(x_normal, y_normal)
 
 pontos_unif<- cbind(x_unif,y_unif, z_unif)
@@ -100,14 +100,17 @@ print(matriz_unif[1:5,])
 
 ```
 
+```{r}
+hist(z_unif)
+hist(z_normal)
+```
+
 # Modelo 1 [ m1(x,y) = b0 + b1x + b2y]
 
 ```{r}
-
-modelo1_unif<- lm(z_unif ~ x_unif + y_unif, data=matriz_unif)
-modelo1_noraml<- lm(z_normal ~ x_normal + y_normal, data=matriz_normal)
-summary(modelo1_unif)
-plot(modelo1_unif)
+modelo1<- lm(z_unif ~ x_unif + y_unif, data=matriz_unif)
+summary(modelo1)
+plot(modelo1, which = 1:2)
 ```
 
 # Modelo 2 [ m2(x,y) = b0 + b1\*x + b2\*y + b3\*x\^2 + b4\*y\^2 + b5\*x\*y]
@@ -115,7 +118,7 @@ plot(modelo1_unif)
 ```{r}
 modelo2<- lm(z_unif ~ x_unif + y_unif + I(x_unif^2) + I(y_unif^2) + I(x_unif*y_unif), data=matriz_unif)
 summary(modelo2)
-plot(modelo2)
+plot(modelo2, which = 1:2)
 ```
 
 # Modelo 3 [ m2(x,y) = b0 + b1\*x + b2\*y + b3\*x\^2 + b4\*y\^2 +b5\*x\*y + b6 \**x\^3 + b7* \*y\^3]
@@ -123,7 +126,7 @@ plot(modelo2)
 ```{r}
 modelo3<- lm(z_unif ~ x_unif + y_unif + I(x_unif^2) + I(y_unif^2) + I(x_unif*y_unif) + I(x_unif^3) + I(y_unif^3) + I(x_unif^2 * y_unif) + I(x_unif * y_unif^2), data=matriz_unif)
 summary(modelo3)
-plot(modelo3)
+plot(modelo3, which = 1:2)
 ```
 
 ```{r}
@@ -142,6 +145,48 @@ residuo = - valor_previsto (quando o real é zero)
 
 - O modelo prevê valores menores que zero (fora do contradomínio de f)
 
-- Como a variável Y é truncada assintoticamente em zero, usar mínimos quadrados diretamente não é bom.
-
 # Transformação LN(Y)
+
+# Modelo 1 [ ln(m1(x,y)) = b0 + b1x + b2y]
+
+```{r}
+modelo1_ln<- lm(log(z_unif) ~ x_unif + y_unif, data=matriz_unif)
+summary(modelo1_ln)
+plot(modelo1_ln, which = 1:2)
+```
+
+# Modelo 2 [ ln(m2(x,y)) = b0 + b1\*x + b2\*y + b3\*x\^2 + b4\*y\^2 + b5\*x\*y]
+
+```{r}
+modelo2_ln<- lm(log(z_unif) ~ x_unif + y_unif + I(x_unif^2) + I(y_unif^2) + I(x_unif*y_unif), data=matriz_unif)
+summary(modelo2_ln)
+plot(modelo2_ln, which = 1:2)
+```
+
+# Modelo 3 [ ln(m2(x,y)) = b0 + b1\*x + b2\*y + b3\*x\^2 + b4\*y\^2 +b5\*x\*y + b6 \**x\^3 + b7* \*y\^3]
+
+```{r}
+modelo3_ln<- lm(log(z_unif) ~ x_unif + y_unif + I(x_unif^2) + I(y_unif^2) + I(x_unif*y_unif) + I(x_unif^3) + I(y_unif^3) + I(x_unif^2 * y_unif) + I(x_unif * y_unif^2), data=matriz_unif)
+summary(modelo3_ln)
+plot(modelo3_ln, which = 1:2)
+```
+
+## Observações
+
+ln(k.exp[-c(x\^2 + y\^2]) = ln(k) - cx \^2 - cy\^2
+
+ou seja,
+
+k = exp[b0]
+
+c = -b1 = -b2
+
+- Os termos de grau 3 não foram estatísticamente significativos, como esperado.
+
+- As suposições do modelo foram atendidas e os parâmetros possuem baixo erro padrão;
+
+Logo, o melhor modelo foi:
+
+Ln(y) = b0 + b1x\^2 + b2y\^2
+
+y = exp[b0 + b1x\^2 + b2y \^2]
