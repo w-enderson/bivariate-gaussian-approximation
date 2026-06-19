@@ -1,5 +1,8 @@
 # bivariate-gaussian-approximation
 
+uniforme: https://www.desmos.com/3d/pnrxd83mdv?lang=pt-BR
+normal: https://www.desmos.com/3d/askq9n8oax?lang=pt-BR
+
 Aproximando Gaussiana Bivariada usando polinômios
 
 problemas :
